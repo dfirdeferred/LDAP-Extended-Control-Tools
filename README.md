@@ -70,7 +70,7 @@ Derived from a full audit of the MS-ADTS LDAP extended controls. Background and 
 findings/detections live in the companion research:
 
 - Two disclosure writeups: **FORCE_UPDATE replication-conflict win** (anti-remediation) and
-  **OBJECT_SECURITY DirSync invisible enumeration** — plus a detection blind-spots survey.
+  **OBJECT_SECURITY DirSync invisible enumeration** plus a detection blind-spots survey.
 - Each toolkit feature was **fire-and-confirmed** against the lab before shipping.
 
 ## License
