@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ldapctl"
+version = "0.1.0"
+description = "Offensive CLI for AD LDAP extended-control techniques: invisible DirSync collection, FORCE_UPDATE anti-remediation, and an EXPECTED_ENTRY_COUNT existence oracle."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "../LICENSE" }
+authors = [{ name = "DFIRdeferred" }]
+keywords = ["active-directory", "ldap", "red-team", "dirsync", "force-update"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Security",
+]
+dependencies = ["ldap3>=2.9", "pycryptodome>=3.10"]
+
+[project.scripts]
+ldapctl = "ldapctl.cli:main"
+
+[tool.setuptools]
+packages = ["ldapctl"]

@@ -1,0 +1,2 @@
+ldap3>=2.9
+pycryptodome>=3.10
