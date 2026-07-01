@@ -6,7 +6,7 @@ two-DC lab (Windows Server 2022) — see **Provenance** below.
 
 **Status:** all 7 features (3 red + 4 blue) are fire-and-confirmed against the lab.
 
-> ## ⚠️ Authorization
+> ## Authorization
 > The `red/` tool is **offensive** and is provided for **authorized security testing and research
 > only** — your own labs, or engagements you have written permission to perform. It is released in
 > the spirit of established AD research tooling (BloodHound, Rubeus, mimikatz). It acts only on the
