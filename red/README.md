@@ -16,9 +16,32 @@ Operationalizes three validated Active Directory LDAP-extended-control technique
 
 ```bash
 pip install .            # installs the `ldapctl` command
-# or, without installing:  python -m ldapctl.cli <subcommand> ...
+# or, without installing:  python -m ldapctl <subcommand> ...
 ```
 Requires Python 3.8+, `ldap3`, and `pycryptodome` (for NTLM). `pip install -r requirements.txt`.
+
+## How to run
+
+Three equivalent ways to invoke a subcommand:
+
+```bash
+ldapctl <subcommand> ...              # after `pip install .`
+python -m ldapctl <subcommand> ...    # from this red/ folder, no install
+```
+
+**Windows convenience wrapper** — `ldapctl.ps1` sets `PYTHONUTF8=1` (so em-dashes render) and uses
+the project's scanner venv Python if present (else system `python`), so you only type the args:
+
+```powershell
+cd red
+$env:LDAPCTL_PASSWORD = '...'         # keep the password off the command line
+.\ldapctl.ps1 recon   --dc dc01.cloud.lab --user 'CLOUD\svc-research' --dn 'CN=Administrator,CN=Users,DC=cloud,DC=lab'
+.\ldapctl.ps1 collect --dc dc01.cloud.lab --user 'CLOUD\svc-research' --filter '(objectClass=user)' --output users.json
+```
+
+Start with `recon` (read-only, one line) to confirm the bind works before anything else.
+Collection output (`*.json`, `*.cookie`) is git-ignored — it can contain directory data, so do not
+commit it.
 
 ## Global options (every subcommand)
 
