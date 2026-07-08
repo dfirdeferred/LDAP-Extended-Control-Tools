@@ -13,10 +13,31 @@ functions, each derived from a validated finding.
 ## Install
 
 ```powershell
-Import-Module .\AdLdapDefense.psd1
+Import-Module .\AdLdapDefense.psd1 -DisableNameChecking
 ```
-Requires PowerShell 5.1+ and the **ActiveDirectory** module (RSAT). Run from an admin workstation
-that can reach the DC (functions use `Invoke-Command`/`Get-WinEvent -ComputerName`).
+Requires PowerShell 5.1+ and the **ActiveDirectory** module (RSAT). Run from an **elevated** admin
+workstation that can reach the DC (functions use `Invoke-Command`/`Get-WinEvent -ComputerName`, and
+the SACL-canary functions need `SeSecurityPrivilege`). `-DisableNameChecking` suppresses the
+harmless "unapproved verb" warning from `Deploy-SaclCanary`.
+
+## How to run
+
+```powershell
+cd blue
+.\Import-AdLdapDefense.ps1                       # loads the module and lists the 5 functions
+```
+
+Then call any function, e.g.:
+
+```powershell
+Invoke-LdapLoggingAudit -Dc dc01.cloud.lab                                   # what the DC actually logs
+Deploy-SaclCanary -Target 'CN=AdminSDHolder,CN=System,DC=cloud,DC=lab' -Audit All
+Test-SaclCanary   -Target 'CN=AdminSDHolder,CN=System,DC=cloud,DC=lab' -Dc dc01.cloud.lab -Audit Read
+Get-ReplicationAbuse -Dc dc01.cloud.lab -Since (Get-Date).AddHours(-6)
+```
+
+State-changing functions (`Invoke-LdapLoggingAudit -Fix`, `Deploy-SaclCanary`, `Test-SaclCanary`)
+support `-WhatIf`. See each function's section below for full parameters.
 
 ---
 
