@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AD LDAP — invisible enumeration, caught</title>
+<style>
+  :root {
+    --ground:#0a0e16; --surface:#121826; --surface-2:#0f1521; --header:#1a2233;
+    --border:#26314a; --text:#cdd6e6; --muted:#6a7890; --dim:#8391a8;
+    --prompt:#5ecad6; --ps:#8ea2ff; --ok:#5fd88a; --alert:#ff8a6a; --amber:#f2c14e;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; }
+  body {
+    background:
+      radial-gradient(1100px 600px at 78% -8%, #14203a 0%, rgba(20,32,58,0) 60%),
+      var(--ground);
+    color:var(--text); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; padding:44px 20px 40px;
+  }
+  .wrap { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:22px; }
+  .kicker { font-size:12px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--prompt); font-weight:600; }
+  h1 { font-size:27px; line-height:1.22; margin:9px 0 0; text-wrap:balance; font-weight:650;
+    letter-spacing:-.01em; color:#e8eefb; }
+  h1 .hl { color:var(--alert); } h1 .hl2 { color:var(--ok); }
+  .sub { color:var(--dim); font-size:14.5px; margin:11px 0 0; max-width:60ch; line-height:1.5; }
+  .term { background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    overflow:hidden; box-shadow:0 24px 60px -28px #000, 0 0 0 1px #0006; }
+  .bar { display:flex; align-items:center; gap:9px; padding:11px 15px; background:var(--header);
+    border-bottom:1px solid var(--border); }
+  .dot { width:11px; height:11px; border-radius:50%; }
+  .d1{background:#ff5f57} .d2{background:#febc2e} .d3{background:#28c840}
+  .bar .name { margin-left:8px; font-family:var(--mono); font-size:12.5px; color:var(--dim); }
+  .bar .tag { margin-left:auto; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); }
+  .body { padding:17px 18px 19px; font-family:var(--mono); font-size:13.5px; line-height:1.62;
+    overflow-x:auto; }
+  .body .l { white-space:pre; }
+  .cmt { color:var(--muted); }
+  .p-red { color:var(--alert); font-weight:600; }
+  .p-ps  { color:var(--ps); font-weight:600; }
+  .out { color:var(--dim); }
+  .alert { color:var(--alert); font-weight:600; }
+  .ok { color:var(--ok); font-weight:700; }
+  .key { color:var(--dim); }
+  .val { color:var(--text); }
+  .gap { height:12px; }
+  .matrix { display:grid; grid-template-columns:1fr auto; gap:2px 18px; margin-top:6px;
+    font-family:var(--mono); font-size:13.5px; }
+  .matrix .h { color:var(--muted); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+    padding-bottom:7px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+  .matrix .ctrl { color:var(--text); }
+  .matrix .ctrl small { color:var(--muted); }
+  .matrix .yes { color:var(--ok); font-weight:700; text-align:right; font-variant-numeric:tabular-nums; }
+  .matrix .no  { color:var(--alert); font-weight:700; text-align:right; }
+  .matrix .no span { color:var(--muted); font-weight:400; }
+  .foot { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; color:var(--muted);
+    font-size:12.5px; font-family:var(--mono); }
+  .foot b { color:var(--prompt); font-weight:600; }
+  .foot .warn { color:var(--amber); }
+  @media (max-width:560px){ h1{font-size:22px} .body{font-size:12px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Purple-team proof · AD LDAP extended controls</div>
+    <h1>A compromised user read the <span class="hl">whole directory</span> — your DC logged <span class="hl">nothing</span>. One tripwire <span class="hl2">caught it</span>.</h1>
+    <p class="sub">OBJECT_SECURITY DirSync lets any domain user bulk-enumerate objects and group memberships with zero Event 1644 and zero Event 4662. A single SACL audit-canary sees it anyway.</p>
+  </header>
+
+  <section class="term">
+    <div class="bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+      <span class="name">red → blue</span><span class="tag">attack · detection</span></div>
+    <div class="body">
+<div class="l cmt"># attacker: a phished domain user — no admin, no replication rights</div>
+<div class="l"><span class="p-red">j.miller@WKSTN</span><span class="out">:~$ ldapctl collect --dc dc01.corp.local --user 'CORP\j.miller' --filter '(objectClass=user)'</span></div>
+<div class="l out">collected <span class="val">2686</span> objects  ·  348 groups (289 with member lists)  -&gt; users.json</div>
+<div class="l alert">footprint:  0 Event 1644   ·   0 Event 4662     &larr; nothing in the DC's default logs</div>
+<div class="gap"></div>
+<div class="l cmt"># defender: a SACL canary sits on the crown jewels</div>
+<div class="l"><span class="p-ps">PS defender@DC-ADMIN&gt;</span><span class="out"> Test-SaclCanary -Target 'CN=AdminSDHolder,CN=System,DC=corp,DC=local' -Audit Read</span></div>
+<div class="gap"></div>
+<div class="l"><span class="key">Target    : </span><span class="val">CN=AdminSDHolder,CN=System,DC=corp,DC=local</span></div>
+<div class="l"><span class="key">Audit     : </span><span class="val">Read</span></div>
+<div class="l"><span class="key">Fired4662 : </span><span class="ok">True</span></div>
+<div class="l"><span class="key">Note      : </span><span class="out">a read canary also catches OBJECT_SECURITY DirSync</span></div>
+    </div>
+  </section>
+
+  <section class="term">
+    <div class="bar"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+      <span class="name">Invoke-LdapLoggingAudit</span><span class="tag">what your DC actually logs</span></div>
+    <div class="body">
+<div class="l cmt"># even with Event 1644 fully enabled, it records only SOME controls</div>
+<div class="l"><span class="p-ps">PS defender@DC-ADMIN&gt;</span><span class="out"> Invoke-LdapLoggingAudit -Dc dc01.corp.local -Probe</span></div>
+<div class="gap"></div>
+<div class="l"><span class="key">Event1644Effective : </span><span class="ok">True</span></div>
+<div class="l"><span class="key">Event4662Auditing  : </span><span class="ok">True</span></div>
+      <div class="matrix">
+        <div class="h">Control</div><div class="h" style="text-align:right">Recorded in 1644</div>
+        <div class="ctrl">SD_FLAGS &nbsp;<small>ACL harvest</small></div><div class="yes">✔ True</div>
+        <div class="ctrl">ASQ &nbsp;<small>group enumeration</small></div><div class="yes">✔ True</div>
+        <div class="ctrl">SHOW_DELETED &nbsp;<small>tombstone recon</small></div><div class="yes">✔ True</div>
+        <div class="ctrl">SEARCH_OPTIONS &nbsp;<small>phantom-root · .1340</small></div><div class="no">✗ False <span>&larr; blind spot</span></div>
+        <div class="ctrl">EXPECTED_ENTRY_COUNT &nbsp;<small>oracle · .2211</small></div><div class="no">✗ False <span>&larr; blind spot</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span><b>ldapctl</b> (red) &nbsp;+&nbsp; <b>AdLdapDefense</b> (blue)</span>
+    <span class="warn">⚠ authorized testing only</span>
+    <span style="margin-left:auto">lab-validated · Windows Server 2022</span>
+  </div>
+</div>
+</body>
+</html>
